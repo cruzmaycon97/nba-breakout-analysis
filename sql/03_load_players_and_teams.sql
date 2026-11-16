@@ -63,3 +63,76 @@ SELECT
 FROM teams
 GROUP BY abbreviation
 HAVING COUNT(*) > 1;
+
+-- 5. Standardize player names across seasons
+-- The same player appears with different accent marks
+-- in the source datasets.
+
+UPDATE stats_2025_import
+SET player = 'Moussa Cissé'
+WHERE id = 1630619
+  AND player = 'Moussa Cisse';
+
+-- 6. Load unique players from both seasons
+
+WITH all_players AS (
+    SELECT
+        id,
+        player,
+        pos
+    FROM stats_2025_import
+
+    UNION ALL
+
+    SELECT
+        id,
+        player,
+        pos
+    FROM stats_2026_import
+),
+
+unique_players AS (
+    SELECT
+        id,
+        MAX(player) AS player_name,
+        MAX(pos) AS position
+    FROM all_players
+    GROUP BY id
+)
+
+INSERT INTO players (
+    player_id,
+    player_name,
+    position
+)
+SELECT
+    id,
+    player_name,
+    position
+FROM unique_players;
+
+-- 7. Validate player count
+-- Expected result: 645
+
+SELECT COUNT(*) AS total_players
+FROM players;
+
+-- 8. Check for duplicate player names
+-- Expected result: no rows
+
+SELECT
+    player_name,
+    COUNT(*) AS total
+FROM players
+GROUP BY player_name
+HAVING COUNT(*) > 1;
+
+-- 9. Verify player records
+
+SELECT
+    player_id,
+    player_name,
+    position
+FROM players
+ORDER BY player_name
+LIMIT 20;
