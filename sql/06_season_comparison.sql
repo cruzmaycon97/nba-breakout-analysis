@@ -11,7 +11,7 @@
 -- Expected result: 233 eligible players.
 
 -- 1. Identify the first eight games played by each player
-
+CREATE VIEW IF NOT EXISTS player_season_comparison AS
 WITH ranked_games AS (
     SELECT
         s.player_id,
@@ -128,4 +128,13 @@ INNER JOIN averages_2026 b
     ON a.player_id = b.player_id
 INNER JOIN players p
     ON a.player_id = p.player_id
+ORDER BY delta_points DESC;
+
+-- Validate the comparison view
+SELECT COUNT(*) AS total_eligible_players
+FROM player_season_comparison;
+
+-- Retrieve player season comparison
+SELECT *
+FROM player_season_comparison
 ORDER BY delta_points DESC;
